@@ -48,10 +48,10 @@ event Exec::run_done(description: Input::EventDescription, tpe: Input::Event, s:
 		}
 	else if ( s == "done" )
 		{
-		Input::remove(name);
+		Input::remove(fmt("%s_stdout", name));
 		system(fmt("rm %s_stdout", name));
 
-		Input::remove(name);
+		Input::remove(fmt("%s_stderr", name));
 		system(fmt("rm %s_stderr", name));
 
 		Input::remove(fmt("%s_done", name));
