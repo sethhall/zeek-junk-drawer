@@ -59,6 +59,7 @@ event Exec::run_done(description: Input::EventDescription, tpe: Input::Event, s:
 
 		callbacks[name](results[name]);
 		delete callbacks[name];
+		delete results[name];
 		}
 	}
 
