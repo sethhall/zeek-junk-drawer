@@ -1,19 +1,18 @@
 @load ./exec
 
+event blah()
+	{
+	when ( local result = Exec::run([$cmd="ls /", $read_files=set("/blah.txt")]) )
+		{
+		print "it ran?!?";
+		if ( result?$stdout )
+			print result$stdout;
+		}
+		
+	}
+
 event bro_init()
 	{
-	Exec::run("ls /", function(r: Exec::Result)
-		{
-		if ( ! r?$stdout )
-			{
-			print "nothing?!?";
-			return;
-			}
-
-		for ( i in r$stdout ) 
-			{
-			print r$stdout[i];
-			}
-		});
+	event blah();
 	}
 
