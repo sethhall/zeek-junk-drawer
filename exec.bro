@@ -1,3 +1,8 @@
+##! A module for executing external command line programs.
+##! This requires code that is still in topic branches and 
+##! definitely won't currently work on any released version of Bro.
+##!
+##! Author: Seth Hall <seth@icir.org>
 
 module Exec;
 
@@ -12,7 +17,7 @@ export {
 		exit_code:    count            &default=0;
 		stdout:       vector of string &optional;
 		stderr:       vector of string &optional;
-		files:        table[string] of vector of string &optional;
+		files:        table[string] of string_vec &optional;
 	};
 
 	global run: function(cmd: Command): Result;
@@ -25,7 +30,6 @@ redef record Command += {
 
 global results: table[string] of Result = table();
 global finished_commands: set[string];
-#global callbacks: table[string] of function(r: Result);
 
 type OneLine: record { line: string; };
 
@@ -77,10 +81,6 @@ event Exec::cleanup_and_do_callback(name: string)
 
 	Input::remove(fmt("%s_done", name));
 	system(fmt("rm %s_done", name));
-
-	#callbacks[name](results[name]);
-	#delete callbacks[name];
-	#delete results[name];
 
 	# Indicate to the "when" async watcher that this command is done.
 	add finished_commands[name];
@@ -139,8 +139,6 @@ event Exec::start_watching_files(cmd: Command)
 
 function run(cmd: Command): Result
 	{
-	print "entering the async whatever";
-
 	cmd$prefix_name = "/tmp/bro-exec-" + unique_id("");
 	system(fmt("touch %s_done", cmd$prefix_name));
 	system(fmt("touch %s_stdout", cmd$prefix_name));
@@ -158,19 +156,15 @@ function run(cmd: Command): Result
 	           cmd$stdin);
 
 	results[cmd$prefix_name] = [];
-	#callbacks[cmd$prefix_name] = cb;
 
 	schedule 1msec { Exec::start_watching_files(cmd) };
 
 	return when ( cmd$prefix_name in finished_commands )
 		{
-		print "yay!";
-		print results;
-		#return results[cmd$prefix_name];
-		#delete finished_commands[cmd$prefix_name];
-		#local result = results[cmd$prefix_name];
-		#delete results[cmd$prefix_name];
-		#return result;
+		delete finished_commands[cmd$prefix_name];
+		local result = results[cmd$prefix_name];
+		delete results[cmd$prefix_name];
+		return result;
 		}
 	}
 
