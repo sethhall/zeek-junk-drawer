@@ -8,18 +8,38 @@ module Exec;
 
 export {
 	type Command: record {
+		## The command line to execute.
+		## Use care to avoid injection attacks!
 		cmd:         string;
+		## Provide standard in to the program as a
+		## string.
 		stdin:       string      &default="";
+		## If additional files are required to be read 
+		## in as part of the output of the command they
+		## can be defined here.
 		read_files:  set[string] &optional;
 	};
 
 	type Result: record {
+		## Exit code from the program.
 		exit_code:    count            &default=0;
+		## Each line of standard out.
 		stdout:       vector of string &optional;
+		## Each line of standard error. 
 		stderr:       vector of string &optional;
+		## If additional files were requested to be read in
+		## the content of the files will be available here.
 		files:        table[string] of string_vec &optional;
 	};
 
+	## Function for running command line programs and getting
+	## output.  This is an asynchronous function which is meant 
+	## to be run with the `when` statement.
+	##
+	## cmd: The command to run.  Use care to avoid injection attacks!
+	##
+	## returns: A record representing the full results from the
+	##          external program execution.
 	global run: function(cmd: Command): Result;
 }
 
@@ -30,6 +50,7 @@ redef record Command += {
 
 global results: table[string] of Result = table();
 global finished_commands: set[string];
+global tmp_files: set[string] = set();
 
 type OneLine: record { line: string; };
 
@@ -75,12 +96,15 @@ event Exec::cleanup_and_do_callback(name: string)
 	{
 	Input::remove(fmt("%s_stdout", name));
 	system(fmt("rm %s_stdout", name));
+	delete tmp_files[fmt("%s_stdout", name)];
 
 	Input::remove(fmt("%s_stderr", name));
 	system(fmt("rm %s_stderr", name));
+	delete tmp_files[fmt("%s_stderr", name)];
 
 	Input::remove(fmt("%s_done", name));
 	system(fmt("rm %s_done", name));
+	delete tmp_files[fmt("%s_done", name)];
 
 	# Indicate to the "when" async watcher that this command is done.
 	add finished_commands[name];
@@ -140,17 +164,22 @@ event Exec::start_watching_files(cmd: Command)
 function run(cmd: Command): Result
 	{
 	cmd$prefix_name = "/tmp/bro-exec-" + unique_id("");
-	system(fmt("touch %s_done", cmd$prefix_name));
-	system(fmt("touch %s_stdout", cmd$prefix_name));
-	system(fmt("touch %s_stderr", cmd$prefix_name));
+	system(fmt("touch %s_done %s_stdout %s_stderr 2>/dev/null", cmd$prefix_name, cmd$prefix_name, cmd$prefix_name));
+	add tmp_files[fmt("%s_done", cmd$prefix_name)];
+	add tmp_files[fmt("%s_stdout", cmd$prefix_name)];
+	add tmp_files[fmt("%s_stderr", cmd$prefix_name)];
+
 	if ( cmd?$read_files )
 		{
 		for ( read_file in cmd$read_files )
+			{
 			system(fmt("touch %s 2>/dev/null", read_file));
+			add tmp_files[read_file];
+			}
 		}
 
 	# Sleep for 1 sec before writing to the done file to avoid race conditions
-	# This makes sure that all of the data is read from 
+	# Hopefully this ensures that all of the data is read from the various files.
 	piped_exec(fmt("%s 2>> %s_stderr 1>> %s_stdout; echo \"exit_code:${?}\" >> %s_done; echo \"done\" >> %s_done", 
 	               cmd$cmd, cmd$prefix_name, cmd$prefix_name, cmd$prefix_name, cmd$prefix_name),
 	           cmd$stdin);
@@ -168,3 +197,12 @@ function run(cmd: Command): Result
 		}
 	}
 
+event bro_done()
+	{
+	# We are punting here and just deleting any files that haven't been processed 
+	# yet
+	for ( fname in tmp_files )
+		{
+		system(fmt("rm \"%s\"", str_shell_escape(fname)));
+		}
+	}
