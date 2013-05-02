@@ -7,7 +7,7 @@
 # The tld-data.bro script is written out on stdout.
 
 puts "module DomainTLD;"
-zone1 = "redef effective_tlds_1st_level +=\n    /\\.("
+#zone1 = "redef effective_tlds_1st_level +=\n    /\\.("
 zone2 = "redef effective_tlds_2nd_level +=\n    /\\.("
 zone3 = "redef effective_tlds_3rd_level +=\n    /\\.("
 #effective_tlds    = "redef Domain::effective_tld_pattern +=\n    /\\.("
@@ -24,26 +24,25 @@ STDIN.each_line do |line|
   next if line =~ /[\x80-\xff]/
   line.strip!
   line.gsub!(/\./, "\\.")
-  #line.gsub!(/\*/, "")
   
   if line =~ /\..*\..*$/
     zone3 += line.chomp + "|"
   elsif line =~ /\..*$/
     zone2 += line.chomp + "|"
-  elsif line =~ /^[^\.]+$/
-    zone1 += line.chomp + "|"
+  #elsif line =~ /^[^\.]+$/
+  #  zone1 += line.chomp + "|"
   end
   
   #effective_tlds += line.chomp + "|"
   #effective_domains += line.chomp + "|"
 end
 
-zone1 = zone1.chop.chop.chop + ")$/;"
+#zone1 = zone1.chop.chop.chop + ")$/;"
 zone2 = zone2.chop.chop.chop + ")$/;"
 zone3 = zone3.chop.chop.chop + ")$/;"
 
-puts zone1.gsub(/\*/, "[^\\.]+")
-puts
+#puts zone1.gsub(/\*/, "[^\\.]+")
+#puts
 puts zone2.gsub(/\*/, "[^\\.]+")
 puts
 puts zone3.gsub(/\*/, "[^\\.]+")

@@ -68,13 +68,11 @@ function zone_by_depth(domain: string, depth: count): string
 
 function effective_tld(domain: string): string
 	{
-	local depth=2;
+	local depth=1;
 	if ( effective_tlds_3rd_level in domain )
 		depth=3;
 	else if ( effective_tlds_2nd_level in domain )
 		depth=2;
-	else if ( effective_tlds_1st_level in domain )
-		depth=1;
 	return zone_by_depth(domain, depth);
 	}
 	
@@ -85,18 +83,16 @@ function effective_domain(domain: string): string
 		depth=4;
 	else if ( effective_tlds_2nd_level in domain )
 		depth=3;
-	else if ( effective_tlds_1st_level in domain )
-		depth=2;
 	return zone_by_depth(domain, depth);
 	}
 	
-#event bro_init()
-#	{
-#	local domains = vector("blah.www.google.com", "www.google.co.uk", "www.easa.eu.int");
-#	for ( i in domains )
-#		{
-#		print fmt("Original: %s", domains[i]);
-#		print fmt("    Effective TLD: %s", DomainTLD::effective_tld(domains[i]));
-#		print fmt("    Effective domain: %s", DomainTLD::effective_domain(domains[i]));
-#		}
-#	}
+event bro_init()
+	{
+	local domains = vector("blah.www.google.com", "www.google.co.uk", "www.easa.eu.int");
+	for ( i in domains )
+		{
+		print fmt("Original: %s", domains[i]);
+		print fmt("    Effective TLD: %s", DomainTLD::effective_tld(domains[i]));
+		print fmt("    Effective domain: %s", DomainTLD::effective_domain(domains[i]));
+		}
+	}
