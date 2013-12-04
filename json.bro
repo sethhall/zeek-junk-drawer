@@ -23,7 +23,7 @@ function convert(v: any, only_loggable: bool &default=F): string
 		return "";
 
 		case "string":
-		return cat("\"", gsub(v, /\"/, "\\\""), "\"");
+		return cat("\"", gsub(gsub(clean(v), /\\/, "\\\\"), /\"/, "\\\""), "\"");
 
 		case "addr":
 		fallthrough;
