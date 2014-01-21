@@ -63,7 +63,7 @@ function zone_by_depth(domain: string, depth: count): string
 	local result = find_last(domain, tld_extraction_suffixes[depth]);
 	if ( result == "" )
 		return domain;
-	return result[1:-1];
+	return result[1:];
 	}
 
 function effective_tld(domain: string): string
