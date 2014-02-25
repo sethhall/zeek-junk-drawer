@@ -40,7 +40,6 @@ event bro_init()
                                         if ( samples[i]?$str )
                                                 sub_msg = fmt("%s%s %s", sub_msg, i==0 ? "":",", samples[i]$str);
                                         }
-
 	                  	NOTICE([$note=DetectTor::Found,
 	                  	        $msg=fmt("%s was found using Tor by connecting to servers with at least %d unique weird certs", key$host, r$unique),
 	                  	        $sub=sub_msg,
