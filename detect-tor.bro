@@ -14,11 +14,14 @@ export {
 	## Time period to see the :bro:see:`tor_cert_threshold` certificates
 	## before deciding it's Tor.
 	const tor_cert_period = 5min;
+	
+        # Number of Tor certificate samples to collect.
+        const tor_cert_samples = 3 &redef;
 }
 
 event bro_init()
 	{
-	local r1 = SumStats::Reducer($stream="ssl.tor-looking-cert", $apply=set(SumStats::UNIQUE));
+	local r1 = SumStats::Reducer($stream="ssl.tor-looking-cert", $apply=set(SumStats::UNIQUE, SumStats::SAMPLE), $num_samples=tor_cert_samples);
 	SumStats::create([$name="detect-tor",
 	                  $epoch=tor_cert_period,
 	                  $reducers=set(r1),
@@ -30,8 +33,16 @@ event bro_init()
 	                  $threshold_crossed(key: SumStats::Key, result: SumStats::Result) =
 	                  	{
 	                  	local r = result["ssl.tor-looking-cert"];
+	                  	local samples = r$samples;
+                                local sub_msg = fmt("Sampled certificates: ");
+                                for ( i in samples )
+                                        {
+                                        if ( samples[i]?$str )
+                                                sub_msg = fmt("%s%s %s", sub_msg, i==0 ? "":",", samples[i]$str);
+                                        }
 	                  	NOTICE([$note=DetectTor::Found,
 	                  	        $msg=fmt("%s was found using Tor by connecting to servers with at least %d unique weird certs", key$host, r$unique),
+	                  	        $sub=sub_msg,
 	                  	        $src=key$host,
 	                  	        $identifier=cat(key$host)]);
 	                  	}]);
