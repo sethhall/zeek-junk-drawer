@@ -48,10 +48,10 @@ event bro_init()
 	                  	}]);
 	}
 
-event x509_certificate(c: connection , is_orig: bool , cert: X509 , chain_idx: count , chain_len: count , der_cert: string )
+event ssl_established(c: connection )
 	{
-	if ( /^CN=[^=,]*$/ == cert$subject && /^CN=[^=,]*$/ == cert$issuer )
+	if ( /^CN=[^=,]*$/ == c$ssl$subject && /^CN=[^=,]*$/ == c$ssl$issuer )
 		{
-		SumStats::observe("ssl.tor-looking-cert", [$host=c$id$orig_h], [$str=cert$subject]);
+		SumStats::observe("ssl.tor-looking-cert", [$host=c$id$orig_h], [$str=c$ssl$subject]);
 		}
 	}
