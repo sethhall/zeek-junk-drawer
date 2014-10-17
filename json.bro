@@ -14,19 +14,6 @@ export {
 	global convert: function(v: any, only_loggable: bool &default=F): string;
 }
 
-function join_vector_of_string(vs: vector of string, j: string): string
-	{
-	local output="";
-	for ( i in vs )
-		{
-		if ( i > 0 )
-			output = cat(output, j);
-			
-		output = cat(output, vs[i]);
-		}
-	return output;
-	}
-
 function convert(v: any, only_loggable: bool &default=F): string
 	{
 	local tn = type_name(v);
@@ -62,7 +49,7 @@ function convert(v: any, only_loggable: bool &default=F): string
 
 	if ( /^record/ in tn )
 		{
-		local rec_parts: vector of string = vector();
+		local rec_parts: string_vec = vector();
 
 		local ft = record_fields(v);
 		for ( field in ft )
@@ -74,19 +61,19 @@ function convert(v: any, only_loggable: bool &default=F): string
 				rec_parts[|rec_parts|] = onepart;
 				}
 			}
-			return cat("{", join_vector_of_string(rec_parts, ", "), "}");
+			return cat("{", join_string_vec(rec_parts, ", "), "}");
 		}
 	
 	# None of the following are supported.
 	else if ( /^set/ in tn )
 		{
-		local set_parts: vector of string = vector();
+		local set_parts: string_vec = vector();
 		local sa: set[bool] = v;
 		for ( sv in sa ) 
 			{
 			set_parts[|set_parts|] = JSON::convert(sv, only_loggable);
 			}
-		return cat("[", join_vector_of_string(set_parts, ", "), "]");
+		return cat("[", join_string_vec(set_parts, ", "), "]");
 		}
 	else if ( /^table/ in tn )
 		{
@@ -98,17 +85,17 @@ function convert(v: any, only_loggable: bool &default=F): string
 			local if_quotes = (ts[0] == "\"") ? "" : "\"";
 			tab_parts[|tab_parts|] = cat(if_quotes, ts, if_quotes, ": ", JSON::convert(ta[ti], only_loggable));
 			}
-		return cat("{", join_vector_of_string(tab_parts, ", "), "}");
+		return cat("{", join_string_vec(tab_parts, ", "), "}");
 		}
 	else if ( /^vector/ in tn )
 		{
-		local vec_parts: vector of string = vector();
+		local vec_parts: string_vec = vector();
 		local va: vector of any = v;
 		for ( vi in va )
 			{
 			vec_parts[|vec_parts|] = JSON::convert(va[vi], only_loggable);
 			}
-		return cat("[", join_vector_of_string(vec_parts, ", "), "]");
+		return cat("[", join_string_vec(vec_parts, ", "), "]");
 		}
 	
 	return "\"\"";
