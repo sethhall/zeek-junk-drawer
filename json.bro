@@ -14,6 +14,19 @@ export {
 	global convert: function(v: any, only_loggable: bool &default=F): string;
 }
 
+function join_vector_of_string(vs: vector of string, j: string): string
+	{
+	local output="";
+	for ( i in vs )
+		{
+		if ( i > 0 )
+			output = cat(output, j);
+			
+		output = cat(output, vs[i]);
+		}
+	return output;
+	}
+
 function convert(v: any, only_loggable: bool &default=F): string
 	{
 	local tn = type_name(v);
@@ -49,7 +62,7 @@ function convert(v: any, only_loggable: bool &default=F): string
 
 	if ( /^record/ in tn )
 		{
-		local rec_parts: set[string] = set();
+		local rec_parts: vector of string = vector();
 
 		local ft = record_fields(v);
 		for ( field in ft )
@@ -58,24 +71,44 @@ function convert(v: any, only_loggable: bool &default=F): string
 			if ( field_desc?$value && (!only_loggable || field_desc$log) )
 				{
 				local onepart = cat("\"", field, "\": ", JSON::convert(field_desc$value, only_loggable));
-				add rec_parts[onepart];
+				rec_parts[|rec_parts|] = onepart;
 				}
 			}
-			return cat("{", join_string_set(rec_parts, ", "), "}");
+			return cat("{", join_vector_of_string(rec_parts, ", "), "}");
 		}
 	
 	# None of the following are supported.
 	else if ( /^set/ in tn )
 		{
-		return "[]";
+		local set_parts: vector of string = vector();
+		local sa: set[bool] = v;
+		for ( sv in sa ) 
+			{
+			set_parts[|set_parts|] = JSON::convert(sv, only_loggable);
+			}
+		return cat("[", join_vector_of_string(set_parts, ", "), "]");
 		}
 	else if ( /^table/ in tn )
 		{
-		return "[]";
+		local tab_parts: vector of string = vector();
+		local ta: table[bool] of any = v;
+		for ( ti in ta ) 
+			{
+			local ts = JSON::convert(ti);
+			local if_quotes = (ts[0] == "\"") ? "" : "\"";
+			tab_parts[|tab_parts|] = cat(if_quotes, ts, if_quotes, ": ", JSON::convert(ta[ti], only_loggable));
+			}
+		return cat("{", join_vector_of_string(tab_parts, ", "), "}");
 		}
 	else if ( /^vector/ in tn )
 		{
-		return "[]";
+		local vec_parts: vector of string = vector();
+		local va: vector of any = v;
+		for ( vi in va )
+			{
+			vec_parts[|vec_parts|] = JSON::convert(va[vi], only_loggable);
+			}
+		return cat("[", join_vector_of_string(vec_parts, ", "), "]");
 		}
 	
 	return "\"\"";
