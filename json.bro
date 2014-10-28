@@ -64,7 +64,6 @@ function convert(v: any, only_loggable: bool &default=F): string
 			return cat("{", join_string_vec(rec_parts, ", "), "}");
 		}
 	
-	# None of the following are supported.
 	else if ( /^set/ in tn )
 		{
 		local set_parts: string_vec = vector();
@@ -75,6 +74,7 @@ function convert(v: any, only_loggable: bool &default=F): string
 			}
 		return cat("[", join_string_vec(set_parts, ", "), "]");
 		}
+
 	else if ( /^table/ in tn )
 		{
 		local tab_parts: vector of string = vector();
@@ -87,6 +87,7 @@ function convert(v: any, only_loggable: bool &default=F): string
 			}
 		return cat("{", join_string_vec(tab_parts, ", "), "}");
 		}
+
 	else if ( /^vector/ in tn )
 		{
 		local vec_parts: string_vec = vector();
