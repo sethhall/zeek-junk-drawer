@@ -50,7 +50,7 @@ event bro_init()
 
 event ssl_established(c: connection )
 	{
-	if ( c$ssl?$subject && /^CN=[^=,]*$/ == c$ssl$subject && c$ssl?$issuer && /^CN=[^=,]*$/ == c$ssl$issuer )
+	if ( c$ssl?$subject && /^CN=www.[^=,]*$/ == c$ssl$subject && c$ssl?$issuer && /^CN=www.[^=,]*$/ == c$ssl$issuer )
 		{
 		SumStats::observe("ssl.tor-looking-cert", [$host=c$id$orig_h], [$str=c$ssl$subject]);
 		}
