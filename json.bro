@@ -29,6 +29,9 @@ function convert(v: any, only_loggable: bool &default=F): string
 		fallthrough;
 		case "port":
 		return cat("\"", v, "\"");
+		case "bool":
+		local b: bool = v;
+		return b ? "true" : "false";
 
 		case "int":
 		fallthrough;
@@ -38,10 +41,8 @@ function convert(v: any, only_loggable: bool &default=F): string
 		fallthrough;
 		case "double":
 		fallthrough;
-		case "bool":
-		fallthrough;
 		case "enum":
-		return cat(v);
+		return cat("\"", v, "\"");
 
 		default:
 		break;
