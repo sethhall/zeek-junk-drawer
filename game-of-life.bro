@@ -8,7 +8,7 @@ module ConwaysGameOfLife;
 
 export {
 	## The length of time between each generation.
-	const generation_life = .1sec &redef;
+	const generation_life = .001sec &redef;
 }
 
 type Field: record {
@@ -19,14 +19,23 @@ type Field: record {
 	y: count;
 };
 
+global initialize_board: function(): vector of bool;
+
 const iter3=set(-1,0,1);
 const looper="this is an arbitrary string that is used for looping. it just needs to be nice and long to accomodate the maximum length someone might use on an axis of their field.";
 
+global stdout = open("/dev/stdout") &raw_output;
+
 function draw_field(f: Field)
 	{
-	print fmt("====Generation: %d====", f$generation);
+	# Reset the cursor to the zero position but don't clear
+	# the screen.  Clearing the screen gives a tearing effect.
+	print stdout, "\033[0;0H";
+
+	print fmt("==== Generation: %d ====", f$generation);
 
 	local i = 0;
+	local background = "\xf0\x9f\x8c\xb1";
 	for ( y in looper )
 		{
 		local j = 0;
@@ -34,11 +43,13 @@ function draw_field(f: Field)
 		for ( x in looper )
 			{
 			local cell = f$x*i+j;
-			field_line += (f$field[cell]) ? "X" : ".";
+			#field_line += (f$field[cell]) ? "\xf0\x9f\x92\xa9" : ".";
+			print stdout, (f$field[cell]) ? "\xf0\x9f\x92\xa9" : background;
 			if ( ++j == f$x )
 				break;
 			}
-		print field_line;
+		#print field_line;
+		print stdout, "\n";
 		if ( ++i == f$y )
 			break;
 		}
@@ -127,16 +138,43 @@ function run(f: Field)
 	event loop_event(f);
 	}
 
+function initialize_board(): vector of bool
+	{
+	return vector(
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,T,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,T,F,T,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,T,T,F,F,F,F,F,F,T,T,F,F,F,F,F,F,F,F,F,F,F,F,T,T,
+	F,F,F,F,F,F,F,F,F,F,F,T,F,F,F,T,F,F,F,F,T,T,F,F,F,F,F,F,F,F,F,F,F,F,T,T,
+	T,T,F,F,F,F,F,F,F,F,T,F,F,F,F,F,T,F,F,F,T,T,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	T,T,F,F,F,F,F,F,F,F,T,F,F,F,T,F,T,T,F,F,F,F,T,F,T,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,T,F,F,F,F,F,T,F,F,F,F,F,F,F,T,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,T,F,F,F,T,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,T,T,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,
+	F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F);
+	}
+
 event bro_init()
 	{
-	local data = vector(F,F,F,T,F,T,T,F,T,F,T,F,T,
-	                    T,F,T,F,F,F,F,F,F,T,F,T,T,
-	                    F,F,F,T,F,T,F,F,T,T,T,T,T,
-	                    F,F,T,F,T,T,F,F,F,F,T,F,F,
-	                    T,F,F,F,F,T,T,F,T,F,F,F,F,
-	                    T,F,F,F,T,T,F,F,F,T,F,T,T,
-	                    F,F,F,F,F,F,T,F,T,F,F,F,T,
-	                    F,F,F,T,F,F,F,F,T,F,T,F,F,
-	                    F,F,F,F,F,T,T,F,F,T,F,T,F);
-	ConwaysGameOfLife::run([$field=data, $x=13, $y=9]);
+	# Clear the screen.
+	print stdout, "\033c";
+
+	local data = initialize_board();
+	ConwaysGameOfLife::run([$field=data, $x=36, $y=27]);
 	}
